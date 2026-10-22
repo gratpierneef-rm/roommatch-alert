@@ -1,0 +1,41 @@
+name: Check RoomMatch
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: "Send a test email"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: roommatch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for new listings
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          CITIES: ${{ vars.CITIES || 'Delft' }}
+          MAX_RENT: ${{ vars.MAX_RENT || '650' }}
+          HOUSEHOLD_SIZE: ${{ vars.HOUSEHOLD_SIZE || '1' }}
+          TEST_EMAIL: ${{ github.event.inputs.test_email }}
+        run: python roommatch_alert.py
+      - name: Save seen listings
+        run: |
+          git config user.name "roommatch-bot"
+          git config user.email "roommatch-bot@users.noreply.github.com"
+          git add seen.json
+          git diff --cached --quiet || (git commit -m "Update seen listings" && git push)
