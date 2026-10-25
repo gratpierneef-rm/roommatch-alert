@@ -224,6 +224,13 @@ def send_mail(subject, body):
     receivers = [e.strip() for e in os.environ["EMAIL_TO"].split(",") if e.strip()]
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"], msg["From"], msg["To"] = subject, sender, ", ".join(receivers)
+    # Controle zonder het wachtwoord te tonen
+    print(f"Mail-check: afzender eindigt op '@{sender.split('@')[-1]}', "
+          f"wachtwoord is {len(password)} tekens, alleen letters: {password.isalpha()}")
+    if not sender.lower().endswith(("@gmail.com", "@googlemail.com")):
+        print("  -> EMAIL_FROM moet een Gmail-adres zijn.")
+    if len(password) != 16 or not password.isalpha():
+        print("  -> Een Gmail app-wachtwoord is precies 16 letters. Maak een nieuw aan.")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
         s.login(sender, password)
         s.sendmail(sender, receivers, msg.as_string())
