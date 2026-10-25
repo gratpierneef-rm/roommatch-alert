@@ -121,8 +121,7 @@ def fetch(url):
 def room_listings():
     r = requests.get(ROOM_API, headers={**HEADERS, "X-Requested-With": "XMLHttpRequest"}, timeout=30)
     if r.status_code != 200 or not r.text.strip().startswith("{"):
-        r = requests.post(ROOM_API, headers={**HEADERS, "X-Requested-With": "XMLHttpRequest"}, timeout=30)
-    r.raise_for_status()
+        raise RuntimeError(f"GET gaf HTTP {r.status_code}, begin van antwoord: {r.text[:150]!r}")
     data = r.json()
     items = []
     for o in data.get("result", []):
@@ -220,12 +219,13 @@ def describe(it):
 
 
 def send_mail(subject, body):
-    sender = os.environ["EMAIL_FROM"]
+    sender = os.environ["EMAIL_FROM"].strip()
+    password = os.environ["EMAIL_PASSWORD"].replace(" ", "").strip()  # app-wachtwoord zonder spaties
     receivers = [e.strip() for e in os.environ["EMAIL_TO"].split(",") if e.strip()]
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"], msg["From"], msg["To"] = subject, sender, ", ".join(receivers)
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-        s.login(sender, os.environ["EMAIL_PASSWORD"])
+        s.login(sender, password)
         s.sendmail(sender, receivers, msg.as_string())
 
 
