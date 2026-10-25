@@ -1,5 +1,5 @@
 """
-Kamer-alert voor ROOM, Pararius en Kamernet (Delft).
+Kamer-alert voor Roommatch, Pararius en Kamernet (Delft).
 
 Stuurt één mail met alle NIEUWE woningen van maximaal 650 euro huur.
 
@@ -38,8 +38,8 @@ KAMERNET_URLS = [
     "https://kamernet.nl/huren/huurwoningen-delft",
 ]
 
-ROOM_API = "https://www.room.nl/portal/object/frontend/getallobjects/format/json"
-ROOM_DETAIL = "https://www.room.nl/aanbod/studentenwoningen/details/{}"
+ROOMMATCH_API = "https://www.roommatch.nl/portal/object/frontend/getallobjects/format/json"
+ROOMMATCH_DETAIL = "https://www.roommatch.nl/aanbod/studentenwoningen/details/{}"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (persoonlijke kamer-alert)",
@@ -117,9 +117,9 @@ def fetch(url):
     return r.text
 
 
-# ---------- ROOM ----------
-def room_listings():
-    r = requests.get(ROOM_API, headers={**HEADERS, "X-Requested-With": "XMLHttpRequest"}, timeout=30)
+# ---------- Roommatch ----------
+def roommatch_listings():
+    r = requests.get(ROOMMATCH_API, headers={**HEADERS, "X-Requested-With": "XMLHttpRequest"}, timeout=30)
     if r.status_code != 200 or not r.text.strip().startswith("{"):
         raise RuntimeError(f"GET gaf HTTP {r.status_code}, begin van antwoord: {r.text[:150]!r}")
     data = r.json()
@@ -141,10 +141,10 @@ def room_listings():
         model = model.get("modelCategorie", {}).get("code", "") if isinstance(model, dict) else ""
         title = f"{o.get('street', '')} {o.get('houseNumber', '')}{o.get('houseNumberAddition') or ''} ({soort})".strip()
         extra = f"Reageren tot: {o.get('closingDate', '?')}" + (f" | Model: {model}" if model else "")
-        items.append(make_item("ROOM", o.get("id"), title, rent, persons, o.get("areaDwelling"),
-                               ROOM_DETAIL.format(o.get("urlKey", o.get("id"))), extra))
+        items.append(make_item("Roommatch", o.get("id"), title, rent, persons, o.get("areaDwelling"),
+                               ROOMMATCH_DETAIL.format(o.get("urlKey", o.get("id"))), extra))
     if DEBUG and data.get("result"):
-        print("  Voorbeeld ROOM-object:", json.dumps(data["result"][0], ensure_ascii=False)[:800])
+        print("  Voorbeeld Roommatch-object:", json.dumps(data["result"][0], ensure_ascii=False)[:800])
     return items
 
 
@@ -238,7 +238,7 @@ def main():
         seen = set()
 
     all_items = []
-    for name, func in (("ROOM", room_listings), ("Pararius", pararius_listings), ("Kamernet", kamernet_listings)):
+    for name, func in (("Roommatch", roommatch_listings), ("Pararius", pararius_listings), ("Kamernet", kamernet_listings)):
         try:
             found = func()
             print(f"{name}: {len(found)} woningen gevonden")
