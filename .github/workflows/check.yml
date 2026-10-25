@@ -26,9 +26,9 @@ jobs:
 
       - name: Check alle sites
         env:
-          EMAIL_FROM: ${{ secrets.GMAIL_ADRESS }}
+          EMAIL_FROM: ${{ secrets.GMAIL_ADDRESS }}
           EMAIL_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          EMAIL_TO: ${{ secrets.GMAIL_ADRESS }}
+          EMAIL_TO: ${{ secrets.GMAIL_ADDRESS }}
         run: python kamer_alert.py
 
       - name: Bewaar welke kamers al gezien zijn
