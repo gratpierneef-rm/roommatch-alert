@@ -1,41 +1,39 @@
-name: Check RoomMatch
+name: Kamer-alert (ROOM, Pararius, Kamernet)
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch:
-    inputs:
-      test_email:
-        description: "Send a test email"
-        type: boolean
-        default: true
+    - cron: "*/10 * * * *"   # elke 10 minuten (GitHub kan soms wat vertraging hebben)
+  workflow_dispatch:          # handmatig starten via de Actions-tab
 
 permissions:
   contents: write
 
 concurrency:
-  group: roommatch
+  group: room-alert
   cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Check for new listings
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests beautifulsoup4
+
+      - name: Check alle sites
         env:
-          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
-          CITIES: ${{ vars.CITIES || 'Delft' }}
-          MAX_RENT: ${{ vars.MAX_RENT || '650' }}
-          HOUSEHOLD_SIZE: ${{ vars.HOUSEHOLD_SIZE || '1' }}
-          TEST_EMAIL: ${{ github.event.inputs.test_email }}
-        run: python roommatch_alert.py
-      - name: Save seen listings
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python kamer_alert.py
+
+      - name: Bewaar welke kamers al gezien zijn
         run: |
-          git config user.name "roommatch-bot"
-          git config user.email "roommatch-bot@users.noreply.github.com"
+          git config user.name "room-bot"
+          git config user.email "room-bot@users.noreply.github.com"
           git add seen.json
-          git diff --cached --quiet || (git commit -m "Update seen listings" && git push)
+          git diff --staged --quiet || (git commit -m "update seen" && git push)
