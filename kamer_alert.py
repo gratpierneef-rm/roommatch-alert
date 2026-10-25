@@ -260,6 +260,10 @@ def main():
 
     matches = []
     for it in all_items:
+        # Alleen woningen in Delft (Kamernet toont soms ook omliggende steden zoals Rotterdam)
+        if it["source"] in ("Kamernet", "Pararius") and f"-{CITY.lower()}/" not in it["link"].lower() \
+                and f"/{CITY.lower()}/" not in it["link"].lower():
+            continue
         if it["id"] in seen:
             continue
         seen.add(it["id"])
