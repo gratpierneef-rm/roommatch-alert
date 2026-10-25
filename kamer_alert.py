@@ -259,16 +259,25 @@ def main():
         return
 
     matches = []
+    stats = {"andere stad": 0, "al gezien": 0, "te duur": 0}
     for it in all_items:
         # Alleen woningen in Delft (Kamernet toont soms ook omliggende steden zoals Rotterdam)
         if it["source"] in ("Kamernet", "Pararius") and f"-{CITY.lower()}/" not in it["link"].lower() \
                 and f"/{CITY.lower()}/" not in it["link"].lower():
+            stats["andere stad"] += 1
+            print(f"  overgeslagen (andere stad): {it['link']}")
             continue
         if it["id"] in seen:
+            stats["al gezien"] += 1
             continue
         seen.add(it["id"])
         if it["rent"] <= MAX_RENT:
             matches.append(it)
+        else:
+            stats["te duur"] += 1
+            print(f"  overgeslagen (te duur, €{it['rent']:.0f}): {it['link']}")
+    print(f"Samenvatting: {len(matches)} nieuw en passend | " +
+          " | ".join(f"{k}: {v}" for k, v in stats.items()))
 
     if matches:
         matches.sort(key=lambda x: x["rent"])
